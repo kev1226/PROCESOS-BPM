@@ -10,7 +10,7 @@ export class CamundaService {
   constructor(private readonly config: ConfigService) {
     this.camunda = new Camunda8({
       CAMUNDA_AUTH_STRATEGY: 'OAUTH',
-      ZEEBE_ADDRESS: this.config.getOrThrow('ZEEBE_ADDRESS'), // con :443
+      ZEEBE_ADDRESS: this.config.getOrThrow('ZEEBE_ADDRESS'),
       ZEEBE_CLIENT_ID: this.config.getOrThrow('ZEEBE_CLIENT_ID'),
       ZEEBE_CLIENT_SECRET: this.config.getOrThrow('ZEEBE_CLIENT_SECRET'),
       CAMUNDA_OAUTH_URL: this.config.getOrThrow('CAMUNDA_OAUTH_URL'),
@@ -19,20 +19,29 @@ export class CamundaService {
 
   async iniciarProcesoReembolso(variables: Record<string, any>) {
     try {
-      const zeebe = this.camunda.getZeebeGrpcApiClient(); // ✅ Cliente gRPC
+      const zeebe = this.camunda.getZeebeGrpcApiClient();
 
-      await zeebe.publishMessage({
-        name: 'portal', // ← este es el campo correcto para gRPC
-        correlationKey: 'inicio-externo', // requerido aunque no se use para correlación real
+      this.logger.log(
+        '⏳ Publicando mensaje "portal" para iniciar instancia...',
+      );
+
+      const result = await zeebe.publishMessage({
+        name: 'portal', // 🔑 debe coincidir con el Global message reference
+        correlationKey: 'clave-' + Date.now(), // 🔑 debe ser única por mensaje
         timeToLive: 10000,
         variables,
       });
 
       this.logger.log(
-        `✅ Mensaje publicado correctamente para iniciar proceso con cédula ${variables.cedula}`,
+        `✅ Mensaje publicado para iniciar proceso con cédula ${variables.cedula}`,
       );
+
+      return result;
     } catch (error) {
-      this.logger.error('❌ Error al iniciar proceso en Camunda', error);
+      this.logger.error(
+        '❌ Error al iniciar proceso en Camunda',
+        error?.message || error,
+      );
       throw new Error('No se pudo iniciar el proceso en Camunda.');
     }
   }
