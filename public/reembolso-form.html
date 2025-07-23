@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Formulario Reembolso</title>
+</head>
+<body>
+  <h2>Reembolso</h2>
+  <form id="formulario" enctype="multipart/form-data">
+    <label>Cédula:</label><br />
+    <input type="text" name="cedula" required /><br />
+
+    <label>Número Factura:</label><br />
+    <input type="text" name="numero" required /><br />
+
+    <label>Monto:</label><br />
+    <input type="number" name="monto" step="0.01" required /><br />
+
+    <label>Fecha:</label><br />
+    <input type="date" name="fecha" required /><br />
+
+    <label>Subir factura:</label><br />
+    <input type="file" name="archivo" accept="application/pdf" required /><br />
+
+    <button type="submit">Enviar</button>
+  </form>
+
+<script>
+  window.camundaForm = {
+    form: {
+      initialize: ({ options, data }) => {
+        // Puedes usar 'data' para precargar datos si quieres
+        document.getElementById("formulario").addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const formData = new FormData(this);
+
+          await fetch("https://tu-backend/reembolso/solicitar", {
+            method: "POST",
+            body: formData
+          });
+
+          options.submit({});
+        });
+      }
+    }
+  };
+</script>
+
+</body>
+</html>
